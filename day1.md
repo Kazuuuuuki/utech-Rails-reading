@@ -88,7 +88,7 @@ http://ref.xaio.jp/ruby/classes/module/append_features</br>
 要は、includeとextendが連鎖していくと期待どうりの継承関係にならなくなる。</br>
 そこで、include呼び出しを行っているbaseがconcernかどうかで場合分けしている。</br>
 concernだった場合、includeを行わず、配列に追加。</br></br>
-concernではなかった場合、今まで配列に溜まっていたものも含めてまとめてinckude。</br>
+concernではなかった場合、今まで配列に溜まっていたものも含めてまとめてinclude。</br>
 最後までconcernかもしれなくない?</br>
 一般的にはありえるが、Railsはauto_loadやincludeをするためだけのようなmoduleあるため、そのようなことはおこらない。</br>
 

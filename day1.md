@@ -33,6 +33,9 @@ facebook
 
 などなど幅広く活動していきます。
 
+##参考書籍
+メタプログラミングRuby</br>
+ぐうの音もでない名著です。
 ##アイスブレイク  
 今後一緒に話し合いながら、ソースコードリーディングを進めていくので、仲良くなりましょう。　　
 
@@ -61,6 +64,40 @@ auto_loadは遅延ファイル読み込み。(必要になったときにファ�
 ###activesupport/lib/active_support/dependencies/autoload.rb
 module Autoloadがextendされたときにクラスインスタンス変数を初期化している。</br>
 eager_autoloadでまとめて必要なものを先にrequireしている。</br>
+
+***autoloadされているModuleを頭から見ていきます。***
+
+###activemodel/lib/active_model/attribute_assignment.rb
+assign_attributes関数のrespond_to?で例外処理しているのはダックタイピングの考え方だと思われる。</br>
+
+###activemodel/lib/active_model/forbidden_attributes_protection.rb
+例外処理してるだけ。
+
+###再びactivemodel/lib/active_model/attribute_assignment.rb
+sendやevalは賛否両論。しかし、適切にprivateやprotectして機能を制限していけばうまく使える。
+ゆえにただのsendではなくpublic_sendを使っている。
+
+###acutivesupport/lib/active_support/concern.rb
+すごい簡単にいえば、めんどくさいし難しいextend周りをうまいことやってくれるmodule
+具体的に何をやってくれるかは英語のコメントでわかるので割愛
+base.instance_variable_setはクラスインスタンス変数を設定している。
+###append_features
+append_featuresメソッドは、モジュールが他のクラスやモジュールにインクルードされる前に呼び出される</br>
+この具体例を見ながら読むと分かりやすい。
+http://ref.xaio.jp/ruby/classes/module/append_features</br>
+要は、includeとextendが連鎖していくと期待どうりの継承関係にならなくなる。</br>
+そこで、include呼び出しを行っているbaseがconcernかどうかで場合分けしている。</br>
+concernだった場合、includeを行わず、配列に追加。</br></br>
+concernではなかった場合、今まで配列に溜まっていたものも含めてまとめてinckude。</br>
+最後までconcernかもしれなくない?</br>
+一般的にはありえるが、Railsはauto_loadやincludeをするためだけのようなmoduleあるため、そのようなことはおこらない。</br>
+
+
+
+
+
+
+
 
 
 

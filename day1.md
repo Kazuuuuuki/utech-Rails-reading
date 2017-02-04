@@ -52,15 +52,15 @@ Active SupportはActive Modelを読むために必要なときに必要な箇所
 
 ##内容
 ###activemodel/lib/active_model.rb
-Active Modelの大元。　　
-ここで大量にモジュールをauto_loadしている。　　
-auto_loadとは?　　
-ActiveSupportのRuby拡張　　
-auto_loadは遅延ファイル読み込み。(必要になったときにファイルを読み込む)　　
+Active Modelの大元。</br>
+ここで大量にモジュールをauto_loadしている。</br>
+auto_loadとは?</br>
+ActiveSupportのRuby拡張</br>
+auto_loadは遅延ファイル読み込み。(必要になったときにファイルを読み込む)</br>
 
 ###activesupport/lib/active_support/dependencies/autoload.rb
-module Autoloadがextendされたときにクラスインスタンス変数を初期化している。　
-eager_autoloadでまとめて必要なものを先にrequireしている。　　
+module Autoloadがextendされたときにクラスインスタンス変数を初期化している。</br>
+eager_autoloadでまとめて必要なものを先にrequireしている。</br>
 
 
 

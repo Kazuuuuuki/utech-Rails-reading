@@ -42,5 +42,5 @@ https://github.com/rails/rails
 ##Active Model  
 Active Recordが扱うのにふさわしくないModelを生成するためのモジュールの集まり。
 そもそもModelとはビジネスロジックを担当している層。(詳しくはMVCを確認してみてください。)  
-基本的にはRailsはMVCアーキテクチャを採用している。　　
+基本的にはRailsはMVCアーキテクチャを採用している。　　　
 しかし、MVCのデメリットが目立ってきた。

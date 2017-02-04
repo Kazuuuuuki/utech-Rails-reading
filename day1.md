@@ -49,3 +49,6 @@ Railsは基本的にModelとしてActive Recordを採用していますが、Mod
 ##Active Support  
 これはRailsのためというより、Rubyの拡張としての意味合いが強いです。  
 Active SupportはActive Modelを読むために必要なときに必要な箇所のみ読むことにします。  
+
+##内容
+###activemodel/lib/active_model.rb

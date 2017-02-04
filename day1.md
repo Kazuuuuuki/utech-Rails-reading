@@ -90,7 +90,7 @@ http://ref.xaio.jp/ruby/classes/module/append_features</br>
 concernだった場合、includeを行わず、配列に追加。</br></br>
 concernではなかった場合、今まで配列に溜まっていたものも含めてまとめてinclude。</br>
 最後までconcernかもしれなくない?</br>
-一般的にはありえるが、Railsはauto_loadやincludeをするためだけのようなmoduleあるため、そのようなことはおこらない。</br>
+一般的にはありえるが、Railsはauto_loadやincludeをするためだけのようなmoduleがあるため、そのようなことはおこらない。</br>
 ###activemodel/lib/active_model/attribute_methods.rb
 具体例</br>
 http://qiita.com/pekepek/items/8eead2021024f70f08f8</br>

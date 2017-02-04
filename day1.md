@@ -46,4 +46,6 @@ Active Recordが扱うのにふさわしくないModelを生成するための�
 しかし、MVCのデメリットが目立ってきた。</br>
 Railsは基本的にModelとしてActive Recordを採用していますが、Model自体が肥大化してしまう（FatModel）ことを防ぐために、テーブルと結びついているModelをActive Record、それ以外のModelをActive Modelとするアーキテクチャを現在採用しています。</br>
 
-##Active Support 
+##Active Support  
+これはRailsのためというより、Rubyの拡張としての意味合いが強いです。  
+Active SupportはActive Modelを読むために必要なときに必要な箇所のみ読むことにします。  

@@ -97,6 +97,11 @@ http://qiita.com/pekepek/items/8eead2021024f70f08f8</br>
 class_attributeはclassの拡張
 面白そうなので寄り道して、class_attributeをみます
 ###activesupport/lib/active_support/core_ext/class/attribute.rb
+extract_options -> 引数の最後についているhashで書かれたoptionを取得する関数(気になったら簡単なのでコードすぐ読めます)</br>
+fetchはdefault値を第2引数に指定できます。(かなり便利)</br>
+remove_possible_singleton_method -> 特異クラスにもしその名称のメソッドがあれば破棄
+define_singleton_method -> 特異クラスにメソッド定義
+
 
 
 

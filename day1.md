@@ -94,6 +94,10 @@ concernではなかった場合、今まで配列に溜まっていたものも�
 ###activemodel/lib/active_model/attribute_methods.rb
 具体例</br>
 http://qiita.com/pekepek/items/8eead2021024f70f08f8</br>
+class_attributeはclassの拡張
+面白そうなので寄り道して、class_attributeをみます
+###activesupport/lib/active_support/core_ext/class/attribute.rb
+
 
 
 

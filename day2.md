@@ -146,7 +146,7 @@ AttributeMethodsのConcernによって`included do~end`と`module ClassMethods`�
   end
 ```
 
-このとき定義された`attribute_aliases`は既存のattributeに別名でのアクセスを可能にする為に使われる。
+定義された`attribute_aliases`は既存のattributeに別名でのアクセスを可能にする為に使われる。
 具体的には新しく定義されたattributeをkeyとして既存のattributeを返すハッシュ値
 
 ```ruby
@@ -161,9 +161,192 @@ AttributeMethodsのConcernによって`included do~end`と`module ClassMethods`�
 ```
 
 attribute_method_matchersはAttributeMethodMatcherクラスの配列を持つオブジェクト
-AttributeMethodMatcherは
+AttributeMethodMatcherはprefixとsuffixをオプションの引数にしてAttributeMethodsで生成されるメソッド名を管理し
+method_nameを引数にそのメソッドが定義されているかどうか判別するメソッドを提供する。
+
+```ruby
+  class AttributeMethodMatcher #:nodoc:
+    attr_reader :prefix, :suffix, :method_missing_target
+
+    AttributeMethodMatch = Struct.new(:target, :attr_name, :method_name)
+
+    def initialize(options = {})
+      @prefix, @suffix = options.fetch(:prefix, ""), options.fetch(:suffix, "")
+      @regex = /^(?:#{Regexp.escape(@prefix)})(.*)(?:#{Regexp.escape(@suffix)})$/
+      @method_missing_target = "#{@prefix}attribute#{@suffix}"
+      @method_name = "#{prefix}%s#{suffix}"
+    end
+
+    def match(method_name)
+      if @regex =~ method_name
+        AttributeMethodMatch.new(method_missing_target, $1, method_name)
+      end
+    end
+
+    def method_name(attr_name)
+      # 何してる？
+      @method_name % attr_name
+    end
+
+    def plain?
+      prefix.empty? && suffix.empty?
+    end
+  end
+```
 
 [メソッド実行部分]
+対象クラスでAttributeMethodsのメソッドが利用された場合の処理について
+
+```rb
+class Person
+  include ActiveModel::AttributeMethods
+
+  attr_accessor :name, :age, :address
+  attribute_method_prefix 'clear_'
+  define_attribute_methods :name, :age, :address
+
+  def initialize(name:, age:, address:)
+    @name = name
+    @age = age
+    @address = address
+  end
+
+  private
+
+  def clear_attribute(attr)
+    send("#{attr}=", nil)
+  end
+end
+
+person = Person.new
+person.name = 'Bob'
+person.name         #=> "Bob"
+person.clear_name
+person.name         #=> nil
+person.age = 20
+person.clear_age
+person.age          #=> nil
+```
+
+`attribute_method_prefix`が呼ばれると渡されたprefixesを引数にして`AttributeMethodMatcher`が生成され
+`self.attribute_method_matchers`に格納される。
+`undefine_attribute_methods`メソッドはこれまでに生成されたattribute_methodを消している。
+つまり`define_attribute_methods`するのは`attribute_method_prefix`の後である必要がある。
+
+```rb
+  def attribute_method_prefix(*prefixes)
+    self.attribute_method_matchers += prefixes.map! { |prefix| AttributeMethodMatcher.new prefix: prefix }
+    undefine_attribute_methods
+  end
+```
+
+`attribute_method_suffix`、`attribute_method_affix`も`attribute_method_prefix`と同様
+
+```rb
+  def attribute_method_suffix(*suffixes)
+    self.attribute_method_matchers += suffixes.map! { |suffix| AttributeMethodMatcher.new suffix: suffix }
+    undefine_attribute_methods
+  end
+
+  def attribute_method_affix(*affixes)
+    self.attribute_method_matchers += affixes.map! { |affix| AttributeMethodMatcher.new prefix: affix[:prefix], suffix: affix[:suffix] }
+    undefine_attribute_methods
+  end
+```
+
+`define_attribute_methods`はprefix, suffixまたはaffixで定義した命名をどのattributeに適用するかを決定するメソッド。
+ここで選択されたattributeに共通メソッドが割り当てられる。
+具体的な処理としてはattr_nameを引数にattribute_method_matchers内に存在するAttributeMethodMatcherをループさせメソッド名を取得。
+そのメソッド名ですでにメソッドが定義されれてないか調べる。
+定義されていなければ`define_method_`で始まるmatcher.method_missing_targetに一致するメソッドがないか確認
+存在すればそのメソッド呼び出し、存在しなければ`define_proxy_call`メソッドを実行。
+
+```rb
+def define_attribute_method(attr_name)
+  attribute_method_matchers.each do |matcher|
+    method_name = matcher.method_name(attr_name)
+
+    unless instance_method_already_implemented?(method_name)
+      generate_method = "define_method_#{matcher.method_missing_target}"
+
+      if respond_to?(generate_method, true)
+        send(generate_method, attr_name)
+      else
+        define_proxy_call true, generated_attribute_methods, method_name, matcher.method_missing_target, attr_name.to_s
+      end
+    end
+  end
+  attribute_method_matchers_cache.clear
+end
+```
+
+`define_proxy_call`について
+このメソッドではnameメソッドが呼ばれた時にsendメソッドに書かれた処理を行うようにメソッドを定義している。
+
+1. name名のメソッドを定義する文字列を生成
+2. sendメソッドの呼び出しを行う文字列を生成
+3. mod内に1のメソッドを定義し、その処理内容として2を設定
+
+ちなみにdefine_attribute_methodの場合modをgenerated_attribute_methodsとしているがgenerated_attribute_methodsはなんなのか
+
+```rb
+  # Define a method `name` in `mod` that dispatches to `send`
+  # using the given `extra` args. This falls back on `define_method`
+  # and `send` if the given names cannot be compiled.
+  def define_proxy_call(include_private, mod, name, send, *extra) #:nodoc:
+    defn = if NAME_COMPILABLE_REGEXP.match?(name)
+      "def #{name}(*args)"
+    else
+      "define_method(:'#{name}') do |*args|"
+    end
+
+    # ?
+    extra = (extra.map!(&:inspect) << "*args").join(", ".freeze)
+
+    target = if CALL_COMPILABLE_REGEXP.match?(send)
+      "#{"self." unless include_private}#{send}(#{extra})"
+    else
+      "send(:'#{send}', #{extra})"
+    end
+
+    mod.module_eval <<-RUBY, __FILE__, __LINE__ + 1
+      #{defn}
+        #{target}
+      end
+    RUBY
+  end
+```
+
+
+method_missingがどの場合に必要になるのかいまいちわからない
+処理としては
+
+```rb
+def method_missing(method, *args, &block)
+  # すでに定義されていないか確認
+  if respond_to_without_attributes?(method, true)
+    super
+  else
+    # attribute_method_matchers内のヒットするAttributeMethodMatchを取得
+    match = matched_attribute_method(method.to_s)
+    # AttributeMethodMatchがあればそれをattribute_missingに渡す
+    match ? attribute_missing(match, *args, &block) : super
+  end
+end
+```
+
+渡されたAttributeMethodMatchの情報からメソッドを呼び出し
+
+```rb
+def attribute_missing(match, *args, &block)
+  __send__(match.target, match.attr_name, *args, &block)
+end
+```
+
+#### 不明点
+- [ ] attribute_method_matchers_matchingメソッド内での`attribute_method_matchers_cache.compute_if_absent(method_name)`の処理
+- [ ] generated_attribute_methodsの存在理由
+- [ ] define_proxy_callで動的メソッド定義しているのでmethod_missingでのゴーストメソッド呼び出しは不要なのでは？
 
 #### 使用するライブラリについて
 [concurrent/map](https://github.com/ruby-concurrency/concurrent-ruby/blob/master/lib/concurrent/map.rb)
@@ -174,3 +357,4 @@ AttributeMethodMatcherは
 - [Rubyのattr_accessor等について](http://qiita.com/jordi/items/7baeb83788c7a8f2070d) 
 - [Ruby入門 - 演算子](http://www.tohoho-web.com/ruby/operators.html)
 - [これはMUST！ActiveSupport の Class#class_attribute を使おう！](http://qiita.com/cuzic/items/ffd115f1e17458020b1b)
+- [ActiveModel::AttributeMethods で重複をなくす](http://qiita.com/pekepek/items/8eead2021024f70f08f8)

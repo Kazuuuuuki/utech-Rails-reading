@@ -317,6 +317,37 @@ end
   end
 ```
 
+
+method_missingがどの場合に必要になるのかいまいちわからない
+処理としては
+
+```rb
+def method_missing(method, *args, &block)
+  # すでに定義されていないか確認
+  if respond_to_without_attributes?(method, true)
+    super
+  else
+    # attribute_method_matchers内のヒットするAttributeMethodMatchを取得
+    match = matched_attribute_method(method.to_s)
+    # AttributeMethodMatchがあればそれをattribute_missingに渡す
+    match ? attribute_missing(match, *args, &block) : super
+  end
+end
+```
+
+渡されたAttributeMethodMatchの情報からメソッドを呼び出し
+
+```rb
+def attribute_missing(match, *args, &block)
+  __send__(match.target, match.attr_name, *args, &block)
+end
+```
+
+#### 不明点
+- [ ] attribute_method_matchers_matchingメソッド内での`attribute_method_matchers_cache.compute_if_absent(method_name)`の処理
+- [ ] generated_attribute_methodsの存在理由
+- [ ] define_proxy_callで動的メソッド定義しているのでmethod_missingでのゴーストメソッド呼び出しは不要なのでは？
+
 #### 使用するライブラリについて
 [concurrent/map](https://github.com/ruby-concurrency/concurrent-ruby/blob/master/lib/concurrent/map.rb)
 

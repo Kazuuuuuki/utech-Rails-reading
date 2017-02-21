@@ -175,6 +175,8 @@ module ActiveSupport
   ##
   ## コールバックコードとしては、特定の前もって定義されたメソッドに反応する、インスタンスメソッドや
   ## プロックまたはラムダ、コールバックオブジェクトが使用できる.詳細は+ClassMethods.set_callback+を見よ.
+  ##
+  ## 関数名(def save の save)とdefine_callbacksのシンボル(:save)は関係ない
   #
   #   class Record
   #     include ActiveSupport::Callbacks
@@ -299,6 +301,7 @@ module ActiveSupport
       ## halted 途中で throw :abort されるとtrueになる
       ## value  __run_callbacks__でnilを与えられたあとは、その値を保ち run_block を実行した後は
       ## その返り値を保存する
+      ## run_block 実行するイベントの内容
       Environment = Struct.new(:target, :halted, :value, :run_block)
 
       ## env.run_block = イベントの実行内容

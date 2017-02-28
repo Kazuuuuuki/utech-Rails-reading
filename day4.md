@@ -3,8 +3,8 @@
 ## 今日の内容
 
 1. active_model/conversion.rb
-2. active_model/dirty.rb
-3. active_model / callbacks.rb
+2. active_support/hash_with_indifferent_access.rb
+3. active_model/dirty.rb
 
 ## 1. active_model/conversion.rb
 

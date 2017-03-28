@@ -36,7 +36,7 @@ Object が to_model という関数に対応してるかテストするための
 + ただ，指定されたキーをdeleteしてるだけ．
 + 今更気づいたけど， core_ext って Ruby のクラスの拡張をする(Core(Ruby) extened)物が入ってるフォルダなのね．
 
-5. active_support / core_ext / module / introspection.rb
+## 5. active_support / core_ext / module / introspection.rb
 
 + Module の 上の階層を調べるための .parent_name, .parent, .parents, .local_constants メソッドを追加する
 
